@@ -16,4 +16,26 @@ describe('Page', () => {
     expect(newPage.itemsPerPage).toEqual(2);
     expect(newPage.currentPage).toEqual(1);
   });
+
+  it('should build new Page', () => {
+    const page: Page<number> = Page.build([1, 2, 3]);
+
+    expect(page.length).toBe(3);
+    expect(page.itemsPerPage).toBe(3);
+    expect(page.currentPage).toBe(0);
+    expect(page.totalItems).toBe(3);
+  });
+
+  it('should build new Page with args', () => {
+    const page: Page<number> = Page.build([1, 2, 3], {
+      totalItems: 4,
+      itemsPerPage: 5,
+      currentPage: 6
+    });
+
+    expect(page.length).toBe(3);
+    expect(page.itemsPerPage).toBe(5);
+    expect(page.currentPage).toBe(6);
+    expect(page.totalItems).toBe(4);
+  });
 });
