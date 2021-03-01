@@ -3,6 +3,8 @@ import {AbstractRepository} from './repository/abstract.repository';
 import {Connection} from './connection/connection';
 import {CONNECTIONS_TOKEN} from './ngx-repository.module.di';
 import {TokenRegistry} from './registry/token.registry';
+import {MockRepository} from '../test/mock.repository';
+import {Repository} from './repository/repository';
 
 /**
  * @ignore
@@ -13,7 +15,7 @@ export class NgxRepositoryService {
   protected injector: Injector;
 
   public constructor(protected parentInjector: Injector,
-                     @Inject(CONNECTIONS_TOKEN) private readonly connections: Connection<any, any>[]) {
+                     @Inject(CONNECTIONS_TOKEN) protected readonly connections: Connection<any, any>[]) {
     this.injector = Injector.create({
       providers: [],
       parent: this.parentInjector
@@ -64,7 +66,7 @@ export class NgxRepositoryService {
     }
   }
 
-  private createNewRepository<T, K, RC, RS>(resourceType: new(...args: any) => T, repositoryType?: Type<AbstractRepository<T, K, RC, RS>>): AbstractRepository<T, K, RC, RS> {
+  protected createNewRepository<T, K, RC, RS>(resourceType: new(...args: any) => T, repositoryType?: Type<AbstractRepository<T, K, RC, RS>>): AbstractRepository<T, K, RC, RS> {
     if (this.connections.length === 0) {
       throw new Error('There is not connection configured.');
     }
@@ -85,6 +87,30 @@ export class NgxRepositoryService {
 
       repository = connection.getRepository(resourceType);
     }
+
+    const token: InjectionToken<AbstractRepository<T, K, RC, RS>> = TokenRegistry.addTokenToRegistry(resourceType, repositoryType);
+
+    this.injector = Injector.create({
+      providers: [{
+        provide: token,
+        useValue: repository
+      }],
+      parent: this.injector
+    });
+
+    return repository;
+  }
+}
+
+@Injectable()
+export class NgxRepositoryTestingService extends NgxRepositoryService {
+  public constructor(protected parentInjector: Injector,
+                     @Inject(CONNECTIONS_TOKEN) connections: Connection<any, any>[]) {
+    super(parentInjector, connections);
+  }
+
+  protected createNewRepository<T, K, RC, RS>(resourceType: new(...args: any) => T, repositoryType?: Type<Repository<T, K>>): Repository<T, K> {
+    const repository: AbstractRepository<T, K, RC, RS> = new MockRepository();
 
     const token: InjectionToken<AbstractRepository<T, K, RC, RS>> = TokenRegistry.addTokenToRegistry(resourceType, repositoryType);
 

@@ -15,11 +15,12 @@ import {Request} from '../query-builder/request';
 import {Normalizer} from '@witty-services/ts-serializer';
 import {RepositoryDenormalizer} from '../normalizer/repository-denormalizer';
 import {ColumnContextConfiguration, COLUMNS_METADATA_KEY} from '../decorator/column.decorator';
+import {Repository} from './repository';
 
 /**
  * @ignore
  */
-export abstract class AbstractRepository<T, K, RC, RS> {
+export abstract class AbstractRepository<T, K, RC, RS> implements Repository<T, K> {
 
   public constructor(protected resourceContextKey: string,
                      protected driver: Driver<RS>,
