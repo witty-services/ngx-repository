@@ -29,11 +29,9 @@ export {
   SubQuery, getDeepQueryMetadataValue, getDeepQueryMetadataValues
 } from './lib/core/decorator/sub-query.decorator';
 
-export {RepositoryNormalizer} from './lib/normalizer/repository-denormalizer';
-
 export {TokenRegistry} from './lib/core/registry/token.registry';
 
-export { NORMALIZER_CONFIGURATION_TOKEN, REPOSITORY_BUILDER_TOKEN } from './lib/ngx-repository.module.di';
+export { REPOSITORY_BUILDER_TOKEN } from './lib/ngx-repository.module.di';
 
 export {NgxRepositoryModule} from './lib/ngx-repository.module';
 
@@ -59,6 +57,10 @@ export * from './lib/core/driver/repository.driver';
 export * from './lib/core/manager/request.manager';
 export * from './lib/core/manager/request-manager.context';
 
+export * from './lib/core/event-stream/decorator/event-listener.decorator';
+export * from './lib/core/event-stream/internal-event';
+export * from './lib/core/event-stream/listener';
+export * from './lib/core/event-stream/publisher.service';
 
 export * from './lib/core/repository/create.repository';
 export * from './lib/core/repository/delete.repository';
@@ -83,5 +85,15 @@ export * from './lib/core/response/processor/denormalize-response.processor';
 export * from './lib/core/response/processor/page-response.processor';
 export * from './lib/core/response/processor/response.processor';
 
-export { NgxRepositoryTestingModule } from './testing/ngx-repository-testing.module';
-export { MockRepository } from './testing/mock.repository';
+export * from './lib/core/util';
+
+export {AfterDenormalizeEvent} from './lib/normalizer/event/after-denormalize.event';
+export {BeforeDenormalizeEvent} from './lib/normalizer/event/before-denormalize.event';
+export {AfterNormalizeEvent} from './lib/normalizer/event/after-normalize.event';
+export {BeforeNormalizeEvent} from './lib/normalizer/event/before-normalize.event';
+export {RepositoryNormalizer} from './lib/normalizer/repository-denormalizer';
+
+export {NgxRepositoryTestingModule} from './testing/ngx-repository-testing.module';
+export {MockRepository} from './testing/mock.repository';
+
+export {NgxSerializerService} from '@witty-services/ngx-serializer';

@@ -20,7 +20,7 @@ export abstract class AbstractRepositoryBuilder implements RepositoryBuilder {
 
   public abstract supports<T>(resourceType: Type<T>, repositoryType: Type<AbstractRepository<T>>): boolean;
 
-  public getRepository<T>(resourceType: Type<T>, repositoryType: Type<AbstractRepository<T>>): AbstractRepository<T> {
+  public getRepository<T>(resourceType: Type<T>, repositoryType?: Type<AbstractRepository<T>>): AbstractRepository<T> {
     if (!Reflect.hasMetadata(this.resourceContextKey, resourceType)) {
       throw new Error(`${ resourceType.name } is not a valid resource.`);
     }
@@ -39,7 +39,7 @@ export abstract class AbstractRepositoryBuilder implements RepositoryBuilder {
     return repository;
   }
 
-  protected abstract getRepositoryInstance<T>(resourceType: Type<T>): AbstractRepository<T>;
+  protected abstract getRepositoryInstance<T>(resourceType: Type<T>, repositoryType?: Type<AbstractRepository<T>>): AbstractRepository<T>;
 
   protected createRepositoryClass<T>(repositoryType: Type<any>, resourceType: Type<T>): Type<any> {
     const defaultConfiguration: ResourceConfiguration = {

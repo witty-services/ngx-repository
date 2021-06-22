@@ -4,9 +4,12 @@ import { Observable } from 'rxjs';
 import { LibraryQuery } from '../query/library.query';
 import { InjectRepository, Page } from '@witty-services/ngx-repository';
 import { HttpRepository } from '@witty-services/ngx-http-repository';
+import {Chance} from 'chance';
 
 @Injectable()
 export class LibraryService {
+
+  private chance: Chance.Chance = new Chance.Chance();
 
   @InjectRepository({resourceType: () => Library, repository: () => HttpRepository})
   private readLibraryRepository: HttpRepository<Library, string>;
@@ -23,11 +26,15 @@ export class LibraryService {
   }
 
   public findById(id: string): Observable<Library> {
-    return this.readLibraryRepository.findOne(new LibraryQuery({libraryId: id}));
+    return this.readLibraryRepository.findById(id);
   }
 
-  public create(library: Library): Observable<string> {
-    return this.writeLibraryRepository.create(library);
+  public create(): Observable<string> {
+    return this.writeLibraryRepository.create(new Library({
+      id: `${Date.now()}`,
+      name: this.chance.company(),
+      opened: true
+    }));
   }
 
   public update(library: Library): Observable<void> {

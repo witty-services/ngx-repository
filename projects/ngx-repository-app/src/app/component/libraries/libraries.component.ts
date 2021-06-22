@@ -1,26 +1,29 @@
-import { Component } from '@angular/core';
-import { BehaviorSubject, Observable } from 'rxjs';
-import { Library } from '../../module/@core/model/library.model';
-import { Person } from '../../module/@core/model/person.model';
-import { PersonService } from '../../module/@core/service/person.service';
-import { map, shareReplay, switchMap } from 'rxjs/operators';
-import { LibrariesService } from '../../service/libraries.service';
-import { Page } from '@witty-services/ngx-repository';
-import { Client } from '../../module/@core/model/client.model';
-import { ClientService } from '../../module/@core/service/client.service';
+import {Component} from '@angular/core';
+import {BehaviorSubject, Observable} from 'rxjs';
+import {Library} from '../../module/@core/model/library.model';
+import {Person} from '../../module/@core/model/person.model';
+import {PersonService} from '../../module/@core/service/person.service';
+import {map, switchMap} from 'rxjs/operators';
+import {Page} from '@witty-services/ngx-repository';
+import {Client} from '../../module/@core/model/client.model';
+import {ClientService} from '../../module/@core/service/client.service';
+import {OnDestroyListener} from '@witty-services/ngx-common';
+import {softCache} from '@witty-services/rxjs-common';
+import {LibraryService} from '../../module/@core/service/library.service';
 
 @Component({
   selector: 'app-libraries',
   templateUrl: './libraries.component.html',
   styleUrls: ['./libraries.component.scss']
 })
+@OnDestroyListener()
 export class LibrariesComponent {
 
-  private currentPageSubject: BehaviorSubject<number> = new BehaviorSubject<number>(1);
+  private readonly currentPageSubject: BehaviorSubject<number> = new BehaviorSubject<number>(1);
 
-  private searchedPersonFirstNameChangeSubject: BehaviorSubject<string> = new BehaviorSubject<string>(null);
+  private readonly searchedPersonFirstNameChangeSubject: BehaviorSubject<string> = new BehaviorSubject<string>(null);
 
-  private searchedClientLastNameChangeSubject: BehaviorSubject<string> = new BehaviorSubject<string>(null);
+  private readonly searchedClientLastNameChangeSubject: BehaviorSubject<string> = new BehaviorSubject<string>(null);
 
   public searchedPersonFirstName: string;
 
@@ -34,16 +37,16 @@ export class LibrariesComponent {
 
   public client$: Observable<Client[]>;
 
-  public constructor(private librariesService: LibrariesService,
+  public constructor(private libraryService: LibraryService,
                      private personService: PersonService,
                      private readonly clientService: ClientService) {
     this.libraries$ = this.currentPageSubject.pipe(
-      switchMap((currentPage: number) => librariesService.findAll(currentPage)),
-      shareReplay({bufferSize: 1, refCount:  true})
+      switchMap((currentPage: number) => libraryService.findAll(currentPage, 5)),
+      softCache()
     );
 
     this.pages$ = this.libraries$.pipe(
-      map((page: Page<Library>) => Array.from(Array(Math.ceil(page.totalItems / page.itemsPerPage)).keys()))
+      map((page: Page<Library>) => Array.from(Array(Math.ceil(page.totalItems / page.itemsPerPage) - 1).keys())),
     );
 
     this.person$ = this.searchedPersonFirstNameChangeSubject.pipe(
@@ -68,13 +71,11 @@ export class LibrariesComponent {
   }
 
   public createLibrary(): void {
-    this.librariesService.create().subscribe();
+    this.libraryService.create().subscribe();
   }
 
   public createPerson(): void {
-    this.personService.create().subscribe(() => {
-      this.searchedPersonFirstNameChangeSubject.next(this.searchedPersonFirstName);
-    });
+    this.personService.create().subscribe();
   }
 
   public createClient(): void {
@@ -91,6 +92,10 @@ export class LibrariesComponent {
 
   public patchClient(client: Client): void {
     this.clientService.patchClient(client).subscribe();
+  }
+
+  public updatePerson(person: Person): void {
+    this.personService.update(person).subscribe();
   }
 
   public patchPerson(person: Person): void {

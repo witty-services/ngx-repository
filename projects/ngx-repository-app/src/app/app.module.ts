@@ -9,7 +9,6 @@ import { InMemoryDataService } from './service/in-memory-data.service';
 import { SystemModule } from './module/@system/system.module';
 import { LibrariesComponent } from './component/libraries/libraries.component';
 import { LibraryComponent } from './component/library/library.component';
-import { LibrariesService } from './service/libraries.service';
 import { NgxRepositoryModule } from '@witty-services/ngx-repository';
 import { MyPageResponseProcessor } from './module/@core/processor/my-page-response.processor';
 import { ClientComponent } from './component/client/client.component';
@@ -46,13 +45,23 @@ export function createFirestore(): Firestore {
     CoreModule,
     FormsModule,
     InMemoryWebApiModule.forRoot(InMemoryDataService, { delay: 100 }),
-    NgxRepositoryModule.forRoot(),
-    NgxFirebaseRepositoryModule.forRoot(),
-    NgxHttpRepositoryModule.forRoot(),
+    NgxRepositoryModule.forRoot({
+      normalizerConfiguration: {
+        denormalizeNull: true,
+        normalizeNull: false,
+        denormalizeUndefined: true,
+        normalizeUndefined: false
+      }
+    }),
+    NgxFirebaseRepositoryModule.forRoot({
+      debug: true
+    }),
+    NgxHttpRepositoryModule.forRoot({
+      debug: true
+    }),
     SystemModule
   ],
   providers: [
-    LibrariesService,
     MyPageResponseProcessor,
     BookService,
     {

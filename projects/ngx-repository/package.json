@@ -6,7 +6,7 @@
     "@angular/core": ">=8.0.3-rc.0 || >=8.0.3"
   },
   "dependencies": {
-    "@witty-services/ts-serializer": "1.0.4",
+    "@witty-services/ngx-serializer": "^1.0.3",
     "@witty-services/rxjs-common": "^1.0.6",
     "object-hash": "^2.0.3"
   },

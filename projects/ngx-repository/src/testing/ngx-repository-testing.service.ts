@@ -1,7 +1,7 @@
 import { Injectable, Type } from '@angular/core';
 import { TestRepositoryBuilder } from './test-repository.builder';
 import { AbstractRepository } from '../lib/core/repository/abstract-repository';
-import { RepositoryService } from '../lib/ngx-repository.service';
+import { RepositoryService } from '../lib/repository-service';
 
 /**
  * @ignore

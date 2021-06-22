@@ -1,7 +1,9 @@
 import { Observable, of } from 'rxjs';
 import {
+  AfterNormalizeEvent,
+  BeforeNormalizeEvent,
   ConfigurationContextProvider,
-  Path,
+  Path, PublisherService,
   RequestBuilder,
   RequestManagerContext
 } from '@witty-services/ngx-repository';
@@ -13,6 +15,7 @@ import { FirebaseRepositoryParamConfiguration } from '../configuration/firebase-
 import { FirebaseOperation } from './firebase.operation';
 import { FirebaseNormalizer } from '../normalizer/firebase.normalizer';
 import Firestore = firebase.firestore.Firestore;
+import {cloneDeep} from 'lodash';
 
 // @dynamic
 @Injectable()
@@ -37,6 +40,14 @@ export class FirebaseRequestBuilder implements RequestBuilder {
   }
 
   protected getBody(body: any): any {
-    return body ? this.normalizer.normalize(body) : null;
+    if (!body) {
+      return null;
+    }
+
+    PublisherService.getInstance().publish(new BeforeNormalizeEvent(cloneDeep({body})));
+    const data: any = this.normalizer.normalize(body);
+    PublisherService.getInstance().publish(new AfterNormalizeEvent(cloneDeep({body, data})));
+
+    return data;
   }
 }

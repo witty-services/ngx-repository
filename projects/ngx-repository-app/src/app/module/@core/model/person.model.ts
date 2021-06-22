@@ -1,7 +1,8 @@
 import {Identifiable} from './identifiable.model';
-import {HttpResource} from '@witty-services/ngx-http-repository';
+import {HttpLiveResource, HttpResource} from '@witty-services/ngx-http-repository';
 import {Column} from '@witty-services/ngx-repository';
 
+@HttpLiveResource()
 @HttpResource({
   path: '/persons'
 })

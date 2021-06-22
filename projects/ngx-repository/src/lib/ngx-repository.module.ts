@@ -1,7 +1,6 @@
 import 'reflect-metadata';
 
 import { Injector, ModuleWithProviders, NgModule, Provider } from '@angular/core';
-import { NORMALIZER_CONFIGURATION_TOKEN } from './ngx-repository.module.di';
 import { NgxRepositoryService } from './ngx-repository.service';
 import { DEFAULT_NORMALIZER_CONFIGURATION, NormalizerConfiguration } from '@witty-services/ts-serializer';
 import { RequestManager } from './core/manager/request.manager';
@@ -10,6 +9,8 @@ import { DenormalizeResponseProcessor } from './core/response/processor/denormal
 import { PageResponseProcessor } from './core/response/processor/page-response.processor';
 import { PathColumnResponseProcessor } from './core/response/processor/path-column-response.processor';
 import { OriginalQueryResponseProcessor } from './core/response/processor/original-query-response.processor';
+import {PublisherService} from './core/event-stream/publisher.service';
+import {NgxSerializerModule, NORMALIZER_CONFIGURATION_TOKEN} from '@witty-services/ngx-serializer';
 
 /**
  * @ignore
@@ -28,17 +29,24 @@ const MODULE_PROVIDERS: Provider[] = [
   DenormalizeResponseProcessor,
   PageResponseProcessor,
   OriginalQueryResponseProcessor,
-  PathColumnResponseProcessor
+  PathColumnResponseProcessor,
+  PublisherService
 ];
 
 /**
  * @ignore
  */
-@NgModule({})
+@NgModule({
+  imports: [
+    NgxSerializerModule
+  ],
+  providers: MODULE_PROVIDERS
+})
 export class NgxRepositoryModule {
 
   public constructor(injector: Injector) {
     NgxRepositoryService.getInstance = () => injector.get(NgxRepositoryService);
+    PublisherService.getInstance = () => injector.get(PublisherService);
   }
 
   public static forRoot(config?: Config): ModuleWithProviders<NgxRepositoryModule> {
@@ -48,8 +56,7 @@ export class NgxRepositoryModule {
         {
           provide: NORMALIZER_CONFIGURATION_TOKEN,
           useValue: config && config.normalizerConfiguration ? config.normalizerConfiguration : DEFAULT_NORMALIZER_CONFIGURATION
-        },
-        ...MODULE_PROVIDERS
+        }
       ]
     };
   }

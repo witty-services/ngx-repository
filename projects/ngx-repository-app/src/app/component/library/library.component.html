@@ -3,12 +3,13 @@
   <form class="library-settings">
     <hr/>
     <label for="name">Library name : </label>
-    <input type="text" id="name" name="name" [(ngModel)]="library.name"/>
+    <input type="text" id="name" name="name" [(ngModel)]="libraryName"/>
     <hr/>
     <button type="button" (click)="onDeleteLibrary(library)">Delete</button>
     <button type="submit" (click)="onUpdateLibrary(library)">Submit</button>
   </form>
 
+  <p>Name : {{ library.name }}</p>
   <p *ngIf="library.description !== null">Description : {{ library.description }}</p>
 
   <h2>Library address</h2>

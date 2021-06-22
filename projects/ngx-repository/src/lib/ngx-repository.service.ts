@@ -1,12 +1,9 @@
-import { Inject, Injectable, InjectionToken, Injector, Type } from '@angular/core';
-import { RepositoryBuilder } from './core/repository/repository.builder';
-import { REPOSITORY_BUILDER_TOKEN } from './ngx-repository.module.di';
-import { TokenRegistry } from './core/registry/token.registry';
-import { AbstractRepository } from './core/repository/abstract-repository';
-
-export interface RepositoryService {
-  getRepository<T>(resourceType: Type<T>, repositoryType: Type<AbstractRepository<T>>): AbstractRepository<T>;
-}
+import {Inject, Injectable, InjectionToken, Injector, Type} from '@angular/core';
+import {RepositoryBuilder} from './core/repository/repository.builder';
+import {REPOSITORY_BUILDER_TOKEN} from './ngx-repository.module.di';
+import {TokenRegistry} from './core/registry/token.registry';
+import {AbstractRepository} from './core/repository/abstract-repository';
+import {RepositoryService} from './repository-service';
 
 /**
  * @ignore
@@ -87,7 +84,7 @@ export class NgxRepositoryService implements RepositoryService {
       }
       const connection: RepositoryBuilder = this.repositoryBuilders.find((c: RepositoryBuilder) => c.supports(resourceType, repositoryType));
       if (!connection) {
-        throw new Error(`There is no connection to support the repository type ${ repositoryType.name }`);
+        throw new Error(`There is no RepositoryBuilder to support the repository type ${ repositoryType.name }`);
       }
 
       repository = connection.getRepository(resourceType, repositoryType);

@@ -8,6 +8,6 @@ export interface RepositoryBuilder {
 
   supports<T>(resourceType: Type<T>, repositoryType: Type<AbstractRepository<T>>): boolean;
 
-  getRepository<T>(resourceType: Type<T>, repositoryType: Type<AbstractRepository<T>>): AbstractRepository<T>;
+  getRepository<T>(resourceType: Type<T>, repositoryType?: Type<AbstractRepository<T>>): AbstractRepository<T>;
 
 }

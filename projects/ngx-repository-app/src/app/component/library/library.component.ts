@@ -1,12 +1,12 @@
 import {Component} from '@angular/core';
 import {ActivatedRoute, Params, Router} from '@angular/router';
-import {BehaviorSubject, Observable} from 'rxjs';
+import {Observable} from 'rxjs';
 import {Library} from '../../module/@core/model/library.model';
-import {filter, map, switchMap, switchMapTo} from 'rxjs/operators';
+import {filter, map, switchMap, tap} from 'rxjs/operators';
 import {LibraryService} from '../../module/@core/service/library.service';
-import {LibrariesService} from '../../service/libraries.service';
 import {Book} from '../../module/@core/model/book.model';
 import {BookService} from '../../module/@core/service/book.service';
+import { clone } from 'lodash';
 
 @Component({
   selector: 'app-library',
@@ -15,22 +15,21 @@ import {BookService} from '../../module/@core/service/book.service';
 })
 export class LibraryComponent {
 
-  public library$: Observable<Library>;
+  public libraryName: string;
 
-  private reload$: BehaviorSubject<void> = new BehaviorSubject<void>(void 0);
+  public library$: Observable<Library>;
 
   private expandedBooks: Map<string, boolean> = new Map<string, boolean>();
 
   public constructor(activatedRoute: ActivatedRoute,
-                     private librariesService: LibrariesService,
                      private libraryService: LibraryService,
                      private bookService: BookService,
                      private router: Router) {
-    this.library$ = this.reload$.pipe(
-      switchMapTo(activatedRoute.params),
+    this.library$ = activatedRoute.params.pipe(
       filter((params: Params) => !!params),
       map((params: Params) => params[`libraryId`]),
-      switchMap((libraryId: string) => this.libraryService.findById(libraryId))
+      switchMap((libraryId: string) => this.libraryService.findById(libraryId)),
+      tap((library: Library) => this.libraryName = library.name)
     );
   }
 
@@ -47,21 +46,13 @@ export class LibraryComponent {
   }
 
   public onUpdateLibrary(library: Library): void {
-    this.libraryService.update(library).subscribe(
-      () => {
-        this.librariesService.refresh();
-        this.reload$.next();
-      }
-    );
+    const libraryToUpdate: Library = clone(library);
+    libraryToUpdate.name = this.libraryName;
+    this.libraryService.update(libraryToUpdate).subscribe();
   }
 
   public onDeleteLibrary(library: Library): void {
-    this.libraryService.delete(library).subscribe(
-      () => {
-        this.router.navigate(['/']);
-        this.librariesService.refresh();
-      }
-    );
+    this.libraryService.delete(library).subscribe(() => this.router.navigate(['/']));
   }
 
   public onUpdateBookTitle(book: Book): void {

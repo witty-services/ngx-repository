@@ -1,9 +1,11 @@
 import { Observable, of } from 'rxjs';
 import { cloneDeep } from 'lodash';
 import {
+  AfterNormalizeEvent,
+  BeforeNormalizeEvent,
   ConfigurationContextProvider,
   getDeepQueryMetadataValues,
-  Path,
+  Path, PublisherService,
   RepositoryNormalizer,
   RepositoryRequest,
   RequestBuilder,
@@ -42,7 +44,15 @@ export class HttpRequestBuilder implements RequestBuilder {
   }
 
   protected getBody(body: any): any {
-    return body ? this.normalizer.normalize(body) : null;
+    if (!body) {
+      return null;
+    }
+
+    PublisherService.getInstance().publish(new BeforeNormalizeEvent(cloneDeep({body})));
+    const data: any = this.normalizer.normalize(body);
+    PublisherService.getInstance().publish(new AfterNormalizeEvent(cloneDeep({body, data})));
+
+    return data;
   }
 
   protected getQueryParams(query: any): HttpParams {
