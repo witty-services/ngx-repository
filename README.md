@@ -345,9 +345,11 @@ export class Book {
 
 ## Query
 
-When to need to retrieve objects from a repository (```findAll()```,
-```findOne()```, ```findById()``` methods), you can specify a query. This query is an
-object that you must create beforehand.
+With NgxRepository, a Query is an object holding some informations associated with the
+querying of one or several resources. You can then provide an instance of this Query as a
+parameter of any method available on ```HttpRepository``` or ```FirebaseRepository```.
+
+Here is an example of a query for a ```@HttpResource()``` :
 
 ```typescript
 import { HttpQueryParam, HttpHeader } from '@witty-services/ngx-http-repository';
@@ -387,6 +389,89 @@ export class BookQuery {
 
   public constructor(data: Partial<BookQuery> = {}) {
     Object.assign(this, data);
+  }
+}
+```
+
+And an example of a query for a ```@FirebaseResource()``` :
+
+```typescript
+import {
+  FirebaseCriteria,
+  FirebaseEndAt,
+  FirebaseEndBefore,
+  FirebaseLimit,
+  FirebaseLimitToLast,
+  FirebaseOrderBy,
+  FirebaseOrderByContext,
+  FirebaseStartAfter,
+  FirebaseStartAt
+} from '@witty-services/ngx-firebase-repository';
+
+export class ClientQuery {
+
+  @FirebaseCriteria({field: 'lastName', operator: '=='})
+  public lastNameEqual?: string;
+
+  @FirebaseOrderBy()
+  public orderBy?: string|FirebaseOrderByContext|(FirebaseOrderByContext|string)[];
+
+  @FirebaseStartAt()
+  public startAt?: any;
+
+  @FirebaseStartAfter()
+  public startAfter?: any;
+
+  @FirebaseEndAt()
+  public endAt?: any;
+
+  @FirebaseEndBefore()
+  public endBefore?: any;
+
+  @FirebaseLimit()
+  public limit?: number;
+
+  @FirebaseLimitToLast()
+  public limitToLast?: number;
+
+  public constructor(data: Partial<ClientQuery> = {}) {
+    Object.assign(this, data);
+  }
+}
+```
+
+The following table lists all the type of fields you can add to a query object and with
+which repository they are available.
+
+| Decorator                    | Description                                                           | Repository type                                |
+|------------------------------|-----------------------------------------------------------------------|------------------------------------------------|
+| ```@PathParam()```           | Replaces path parameter with field value                              | ```HttpRepository```, ```FirebaseRepository``` |
+| ```@HttpQueryParam()```      | Adds a query param to the HTTP request (eg. ```/users/?name=Oscar```) | ```HttpRepository```                           |
+| ```@HttpHeader()```          | Adds a HTTP header to the request with field value                    | ```HttpRepository```                           |
+| ```@FirebaseCriteria()```    | Adds a Firestore query criteria                                       | ```FirebaseRepository```                       |
+| ```@FirebaseOrderBy()```     | Adds a ```.orderBy()``` clause to Firestore request                   | ```FirebaseRepository```                       |
+| ```@FirebaseLimit()```       | Adds a ```.limit()``` clause to Firestore request                     | ```FirebaseRepository```                       |
+| ```@FirebaseLimitToLast()``` | Adds a ```.limitToLast()``` clause to Firestore request               | ```FirebaseRepository```                       |
+| ```@FirebaseStartAt()```     | Adds a ```.startAt()``` query cursor to Firestore request             | ```FirebaseRepository```                       |
+| ```@FirebaseStartAfter()```  | Adds a ```.startAfter()``` query cursor to Firestore request          | ```FirebaseRepository```                       |
+| ```@FirebaseEndAt()```       | Adds a ```.endAt()``` query cursor to Firestore request               | ```FirebaseRepository```                       |
+| ```@FirebaseEndBefore()```   | Adds a ```.endBefore()``` query cursor to Firestore request           | ```FirebaseRepository```                       |
+
+The following example shows a query used in a ```findAll()``` operation on a Firebase
+resource.
+
+```typescript
+@Injectable()
+export class ClientService {
+
+  @InjectRepository({resourceType: () => Client, repository: () => FirebaseRepository})
+  private repository: FirebaseRepository<Client, string>;
+
+  public searchByLastName(searchedLastName: string): Observable<Page<Client>> {
+    return this.repository.findAll(new ClientQuery({
+      lastNameEqual: searchedLastName,
+      orderBy: ['firstName']
+    }));
   }
 }
 ```
