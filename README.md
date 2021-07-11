@@ -29,8 +29,15 @@ NgxRepository allows you to easily create a strongly typed data access layer in 
   * [JoinColumn](#joincolumn)
   * [SubCollection](#subcollection)
 * [Query](#query)
-* [Custom repository](#custom-repository)
+* [Resource configuration](#resource-configuration)
+* [Page response processor](#page-response-processor)
+* [HttpLiveResource](#httpliveresource)
 * [Advanced usage](#advanced-usage)
+  * [Custom repository](#custom-repository)
+  * [Event system](#event-system)
+* [Test and debug](#test-and-debug)
+  * [NgxRepositoryTestingModule](#ngxrepositorytestingmodule)
+  * [Enable debug mode](#enable-debug-mode)
 * [Install and build project](#install-and-build-project)
 
 ## How to install
@@ -476,7 +483,108 @@ export class ClientService {
 }
 ```
 
-## Custom Repository
+## Resource configuration
+
+You can configure your resource to your needs by adding context to ```@HttpResource()``` 
+and ```@FirebaseResource()``` resource decorators.
+
+> For example, you may need to specify a different path to your resource depending on
+> the operation. This can be done by using the syntax in the following example.
+
+```typescript
+@HttpResource({
+  path: '/libraries',
+  update: '/library',
+})
+export class Library {
+  
+}
+```
+
+For each operation execution, NgxRepository will look for a specific context attached to
+the operation for the resource. If no specific context is found, the default context 
+(here the ```path```) will be used.
+
+The available configuration is different depending on the type of resource and the 
+targeted operation.
+
+The targetable operations are the following :
+
+* ```findById```
+* ```findOne```
+* ```findAll```
+* ```create```
+* ```update```
+* ```patch```
+* ```delete```
+* ```read```
+* ```write```
+
+**Response type**
+
+Define a specific response type (different from the resource) using ```responseType```
+context parameter.
+
+```typescript
+@HttpResource({
+  path: '/libraries',
+  write: {
+    responseType: () => WriteLibraryDto
+  }
+})
+export class Library {
+
+}
+```
+
+**Path**
+
+Define a specific path for an operation using ```path``` context parameter. Passing a
+string directly as an operation context is also possible to define the ```path``` context
+parameter.
+
+> ⚠️ This context parameter is only available for ```@HttpResource()```
+
+```typescript
+@HttpResource({
+  path: '/libraries',
+  create: {
+    path: '/create-a-library'
+  },
+  update: '/update-a-library'
+})
+export class Library {
+
+}
+```
+
+**Page response processor**
+
+Define a specific [page response processor](#page-response-processor) using
+```pageResponseProcessor``` context parameter.
+
+> ⚠️ This context parameter is only available for ```findAll``` operation and
+> ```@HttpResource()```
+
+```typescript
+@HttpResource({
+  path: '/libraries',
+  findAll: {
+    pageResponseProcessor: MyPageResponseProcessor
+  }
+})
+export class Library {
+
+}
+```
+
+## Page response processor
+
+## HttpLiveResource
+
+## Advanced usage
+
+### Custom Repository
 
 In specific case, you can define a custom repository like that :
 
@@ -502,286 +610,13 @@ export class PersonService {
 }
 ```
 
-## Advanced usage
+### Event system
 
-You can override response transformation for each NgxRepository driver.
+## Test and debug
 
-### HttpPageBuilder
+### NgxRepositoryTestingModule
 
-In HttpDriver, you can override response which return some items by developing a page builder.
-
-```typescript
-import { Page } from '@witty-services/ngx-repository';
-import { HttpPageBuilder, HttpRepository } from '@witty-services/ngx-http-repository';
-
-@Injectable()
-export class MyHttpPageBuilder implements HttpPageBuilder {
-
-  public buildPage(response$: Observable<HttpResponse<any>>, repository: HttpRepository<any, any>): Observable<Page<any>> {
-    return response$.pipe(
-      map((response: HttpResponse<any>) => {
-        const page: Page<any> = new Page<any>(response.body);
-
-        page.totalItems = 0; // get total items from response;
-        page.itemsPerPage = 0; // get item per page from response;
-        page.currentPage = 0; // get current page from response;
-
-        return page;
-      })
-    );
-  }
-}
-```
-
-And to use your new builder, you just have to provide a service behind a specific token with your class :
-
-```typescript
-import { NgxRepositoryModule } from '@witty-services/ngx-repository';
-import { NgxHttpRepositoryModule, HTTP_PAGE_BUILDER_TOKEN } from '@witty-services/ngx-http-repository';
-
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    NgxRepositoryModule.forRoot(),
-    NgxHttpRepositoryModule
-  ],
-  providers: [
-    {
-      provide: HTTP_PAGE_BUILDER_TOKEN,
-      useClass: MyHttpPageBuilder
-    }
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule {
-}
-```
-
-### HttpCreateResponseBuilder
-
-In HttpDriver, you can override response which return the result of creation request. By defaultn NgxHttpRepository
-search id in http response body. But you can override this behavior to find id in other place.
-
-```typescript
-import { HttpResponseBuilder, HttpRepository } from '@witty-services/ngx-http-repository';
-
-@Injectable()
-export class MyHttpCreateResponseBuilder implements HttpResponseBuilder {
-
-  public buildPage(response$: Observable<HttpResponse<any>>, repository: HttpRepository<any, any>): Observable<any> {
-    return response$.pipe(
-      map((response: HttpResponse<any>) => response.headers.get('some-header'))
-    );
-  }
-}
-```
-
-And to use your new builder, you just have to provide a service behind a specific token with your class :
-
-```typescript
-import { NgxRepositoryModule } from '@witty-services/ngx-repository';
-import { NgxHttpRepositoryModule, HTTP_CREATE_RESPONSE_BUILDER } from '@witty-services/ngx-http-repository';
-
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    NgxRepositoryModule.forRoot(),
-    NgxHttpRepositoryModule
-  ],
-  providers: [
-    {
-      provide: HTTP_CREATE_RESPONSE_BUILDER,
-      useClass: MyHttpCreateResponseBuilder
-    }
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule {
-}
-```
-
-### HttpFindOneResponseBuilder
-
-In HttpDriver, you can override response which return just one result.
-
-```typescript
-import { HttpResponseBuilder, HttpRepository } from '@witty-services/ngx-http-repository';
-
-@Injectable()
-export class MyHttpFindOneResponseBuilder implements HttpResponseBuilder {
-
-  public buildPage(response$: Observable<HttpResponse<any>>, repository: HttpRepository<any, any>): Observable<any> {
-    return response$.pipe(
-      map((response: HttpResponse<any>) => response.body)
-    );
-  }
-}
-```
-
-And to use your new builder, you just have to provide a service behind a specific token with your class :
-
-```typescript
-import { NgxRepositoryModule } from '@witty-services/ngx-repository';
-import { NgxHttpRepositoryModule, HTTP_FIND_ONE_RESPONSE_BUILDER } from '@witty-services/ngx-http-repository';
-
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    NgxRepositoryModule.forRoot(),
-    NgxHttpRepositoryModule
-  ],
-  providers: [
-    {
-      provide: HTTP_FIND_ONE_RESPONSE_BUILDER,
-      useClass: MyHttpFindOneResponseBuilder
-    }
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule {
-}
-```
-
-### FirebasePageBuilder
-
-In FirebaseDriver, you can override response which return some items by developing a page builder.
-
-```typescript
-import { Page } from '@witty-services/ngx-repository';
-import { FirebasePageBuilder, FirebaseRepository } from '@witty-services/ngx-firebase-repository';
-
-@Injectable()
-export class MyFirebasePageBuilder implements FirebasePageBuilder {
-
-  public buildPage(response$: Observable<QuerySnapshot<DocumentData>>, repository: FirebaseRepository<any, any>): Observable<Page<any>> {
-    return response$.pipe(
-      map((qs: QuerySnapshot<DocumentData>) => {
-        const page: Page<any> = new Page<any>(qs.docs.map((doc: QueryDocumentSnapshot<DocumentData>) => ({
-          id: doc.id,
-          ...doc.data()
-        })));
-
-        page.totalItems = 0; // get total items from response;
-        page.itemsPerPage = 0; // get item per page from response;
-        page.currentPage = 0; // get current page from response;
-
-        return page;
-      })
-    );
-  }
-}
-```
-
-And to use your new builder, you just have to provide a service behind a specific token with your class :
-
-```typescript
-import { NgxRepositoryModule } from '@witty-services/ngx-repository';
-import { NgxFirebaseRepositoryModule, FIREBASE_PAGE_BUILDER_TOKEN } from '@witty-services/ngx-firebase-repository';
-
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    NgxRepositoryModule.forRoot(),
-    NgxFirebaseRepositoryModule.forRoot()
-  ],
-  providers: [
-    {
-      provide: FIREBASE_PAGE_BUILDER_TOKEN,
-      useClass: MyFirebasePageBuilder
-    }
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule {
-}
-```
-
-### FirebaseCreateResponseBuilder
-
-In FirebaseDriver, you can override response which return the result of creation request.
-
-```typescript
-import { FirebaseResponseBuilder, FirebaseRepository } from '@witty-services/ngx-firebase-repository';
-
-@Injectable()
-export class MyFirebaseCreateResponseBuilder implements FirebaseResponseBuilder {
-
-  public buildPage(response$: Observable<DocumentReference<DocumentData>>, repository: FirebaseRepository<any, any>): Observable<any> {
-    return response$.pipe(
-      map((documentReference: DocumentReference<DocumentData>) => documentReference.id)
-    );
-  }
-}
-```
-
-And to use your new builder, you just have to provide a service behind a specific token with your class :
-
-```typescript
-import { NgxRepositoryModule } from '@witty-services/ngx-repository';
-import { NgxFirebaseRepositoryModule, FIREBASE_CREATE_RESPONSE_BUILDER } from '@witty-services/ngx-firebase-repository';
-
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    NgxRepositoryModule.forRoot(),
-    NgxFirebaseRepositoryModule.forRoot()
-  ],
-  providers: [
-    {
-      provide: FIREBASE_CREATE_RESPONSE_BUILDER,
-      useClass: MyFirebaseCreateResponseBuilder
-    }
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule {
-}
-```
-
-### FirebaseFindOneResponseBuilder
-
-In FirebaseDriver, you can override response which return just one result.
-
-```typescript
-import { FirebaseResponseBuilder, FirebaseRepository } from '@witty-services/ngx-firebase-repository';
-
-@Injectable()
-export class MyFirebaseFindOneResponseBuilder implements FirebaseResponseBuilder {
-
-  public buildPage(response$: Observable<DocumentSnapshot>, repository: FirebaseRepository<any, any>): Observable<any> {
-    return response$.pipe(
-      map((documentReference: DocumentSnapshot) => documentReference.id)
-    );
-  }
-}
-```
-
-And to use your new builder, you just have to provide a service behind a specific token with your class :
-
-```typescript
-import { NgxRepositoryModule } from '@witty-services/ngx-repository';
-import {
-  NgxFirebaseRepositoryModule,
-  FIREBASE_FIND_ONE_RESPONSE_BUILDER
-} from '@witty-services/ngx-firebase-repository';
-
-@NgModule({
-  declarations: [AppComponent],
-  imports: [
-    NgxRepositoryModule.forRoot(),
-    NgxFirebaseRepositoryModule.forRoot()
-  ],
-  providers: [
-    {
-      provide: FIREBASE_FIND_ONE_RESPONSE_BUILDER,
-      useClass: MyFirebaseFindOneResponseBuilder
-    }
-  ],
-  bootstrap: [AppComponent]
-})
-export class AppModule {
-}
-```
+### Enable debug mode
 
 ## Install and build project
 
