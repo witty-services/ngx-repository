@@ -30,7 +30,9 @@ NgxRepository allows you to easily create a strongly typed data access layer in 
   * [SubCollection](#subcollection)
 * [Query](#query)
 * [Resource configuration](#resource-configuration)
-* [Page response processor](#page-response-processor)
+* [HTTP Pagination](#http-pagination)
+  * [Page type](#page-type)
+  * [Page response processor](#page-response-processor)
 * [HttpLiveResource](#httpliveresource)
 * [Advanced usage](#advanced-usage)
   * [Custom repository](#custom-repository)
@@ -107,7 +109,7 @@ done, you can start annotating this class with the following decorators.
 
 #### HttpResource and FirebaseResource
 
-First, add a ```@HttpResource()``` or ```@FirebaseResource()``` decorator (depending on which protocol you wish to use)
+First, add a `@HttpResource()` or `@FirebaseResource()` decorator (depending on which protocol you wish to use)
 on the resource class. The most basic configuration for this annotation consists in giving the HTTP or Firebase resource
 path of the resource.
 
@@ -130,7 +132,7 @@ export class User {
 
 #### Id and Column
 
-Then, add an ```@Id()``` decorator on the resource id and ```@Column()``` decorators on each resource field you want
+Then, add an `@Id()` decorator on the resource id and `@Column()` decorators on each resource field you want
 mapped with NgxRepository.
 
 ```typescript
@@ -163,8 +165,8 @@ export class User {
 
 Right, now you have your resources. NgxRepository will generate all repositories on demand. You just have to inject it
 in your services using the
-```@InjectRepository()``` decorator. You need to specify in the decorator context the type of your resource and the type
-of your repository(```HttpRepository```, ```FirebaseRepository```...).
+`@InjectRepository()` decorator. You need to specify in the decorator context the type of your resource and the type
+of your repository(`HttpRepository`, `FirebaseRepository`...).
 
 The generic types of the generated repository type are the type of the resource and the type of the resource id.
 
@@ -195,16 +197,16 @@ export class BookService {
 }
 ```
 
-Each repository of a resource made from ```FirebaseDriver``` or ```HttpDriver``` are singleton services stored in
+Each repository of a resource made from `FirebaseDriver` or `HttpDriver` are singleton services stored in
 Angular Injector, so don't worry about injecting them on several services.
 
 Last but not least : NgxRepository automatically serializes and deserializes your resources
 between JSON and strongly typed TypeScript classes. Note that only fields with
-```@Id()``` or ```@Column()``` decorators are marked for serialization.
+`@Id()` or `@Column()` decorators are marked for serialization.
 
 ## Id and Column configuration
 
-You can add configuration to ```@Id()``` and ```@Column()``` decorators as follows.
+You can add configuration to `@Id()` and `@Column()` decorators as follows.
 
 ```typescript
 import { HttpResource } from '@witty-services/ngx-http-repository';
@@ -238,29 +240,29 @@ export class User {
 As shown in the example above, each configuration field is optional : you can define 
 any field you want or not to have any configuration at all.
 
-| Field                      | Description                                                                                                             | Available on ```@Id()```   |
-|----------------------------|-------------------------------------------------------------------------------------------------------------------------|----------------------------|
-| ```field```                | Field name in JSON                                                                                                      | Yes                        |
-| ```type```                 | Field type after deserialization : only fields with ```@Id()``` or ```@Column()``` decorator in type will be serialized | No                         |
-| ```readOnly```             | Boolean to indicate to not send the value in json to the server                                                         | Yes                        |
-| ```writeOnly```            | Boolean to indicate to ignore the field in json                                                                         | Yes                        |
-| ```customConverter```      | A converter to make a custom serialization/deserialization                                                              | No                         |
-| ```denormalizeNull```      | Boolean to override global configuration to denormalize the column when is set to null value                            | Yes                        |
-| ```denormalizeUndefined``` | Boolean to override global configuration to denormalize the column when is set to undefined value                       | Yes                        |
-| ```normalizeNull```        | Boolean to override global configuration to normalize the column when is set to null value                              | Yes                        |
-| ```normalizeUndefined```   | Boolean to override global configuration to normalize the column when is set to undefined value                         | Yes                        |
+| Field                  | Description                                                                                                     | Available on `@Id()`   |
+|------------------------|-----------------------------------------------------------------------------------------------------------------|------------------------|
+| `field`                | Field name in JSON                                                                                              | Yes                    |
+| `type`                 | Field type after deserialization : only fields with `@Id()` or `@Column()` decorator in type will be serialized | No                     |
+| `readOnly`             | Boolean to indicate to not send the value in json to the server                                                 | Yes                    |
+| `writeOnly`            | Boolean to indicate to ignore the field in json                                                                 | Yes                    |
+| `customConverter`      | A converter to make a custom serialization/deserialization                                                      | No                     |
+| `denormalizeNull`      | Boolean to override global configuration to denormalize the column when is set to null value                    | Yes                    |
+| `denormalizeUndefined` | Boolean to override global configuration to denormalize the column when is set to undefined value               | Yes                    |
+| `normalizeNull`        | Boolean to override global configuration to normalize the column when is set to null value                      | Yes                    |
+| `normalizeUndefined`   | Boolean to override global configuration to normalize the column when is set to undefined value                 | Yes                    |
 
-The ```field``` and ```type``` fields can be defined using a shorthand. For ```field```,
+The `field` and `type` fields can be defined using a shorthand. For `field`,
 just specify a string directly in the context, it will be interpreted as such. Same thing
-for ```type``` : specify directly an anonymous function returning the type in the context
+for `type` : specify directly an anonymous function returning the type in the context
 (as shown in the example).
 
 ## Path parameters and PathColumn
 
-You can add parameters on a resource path using ```:``` character. You can map those parameters
+You can add parameters on a resource path using `:` character. You can map those parameters
 with values using the [query system](#query).
 
-```@PathColumn()``` decorator allows you to retrieve the path parameter value of a 
+`@PathColumn()` decorator allows you to retrieve the path parameter value of a 
 resource and map it to the decorated field.
 
 ```typescript
@@ -293,7 +295,7 @@ export class Book {
 
 ### JoinColumn
 
-You can fetch associated resources using ```JoinColumn```.
+You can fetch associated resources using `JoinColumn`.
 
 ```typescript
 import { HttpResource } from '@witty-services/ngx-http-repository';
@@ -322,7 +324,7 @@ export class Book {
 
 ### SubCollection
 
-You can fetch associated resources using ```SubCollection```.
+You can fetch associated resources using `SubCollection`.
 
 ```typescript
 import { HttpResource, HttpRepository } from '@witty-services/ngx-http-repository';
@@ -354,9 +356,9 @@ export class Book {
 
 With NgxRepository, a Query is an object holding some informations associated with the
 querying of one or several resources. You can then provide an instance of this Query as a
-parameter of any method available on ```HttpRepository``` or ```FirebaseRepository```.
+parameter of any method available on `HttpRepository` or `FirebaseRepository`.
 
-Here is an example of a query for a ```@HttpResource()``` :
+Here is an example of a query for a `@HttpResource()` :
 
 ```typescript
 import { HttpQueryParam, HttpHeader } from '@witty-services/ngx-http-repository';
@@ -400,7 +402,7 @@ export class BookQuery {
 }
 ```
 
-And an example of a query for a ```@FirebaseResource()``` :
+And an example of a query for a `@FirebaseResource()` :
 
 ```typescript
 import {
@@ -450,21 +452,21 @@ export class ClientQuery {
 The following table lists all the type of fields you can add to a query object and with
 which repository they are available.
 
-| Decorator                    | Description                                                           | Repository type                                |
-|------------------------------|-----------------------------------------------------------------------|------------------------------------------------|
-| ```@PathParam()```           | Replaces path parameter with field value                              | ```HttpRepository```, ```FirebaseRepository``` |
-| ```@HttpQueryParam()```      | Adds a query param to the HTTP request (eg. ```/users/?name=Oscar```) | ```HttpRepository```                           |
-| ```@HttpHeader()```          | Adds a HTTP header to the request with field value                    | ```HttpRepository```                           |
-| ```@FirebaseCriteria()```    | Adds a Firestore query criteria                                       | ```FirebaseRepository```                       |
-| ```@FirebaseOrderBy()```     | Adds a ```.orderBy()``` clause to Firestore request                   | ```FirebaseRepository```                       |
-| ```@FirebaseLimit()```       | Adds a ```.limit()``` clause to Firestore request                     | ```FirebaseRepository```                       |
-| ```@FirebaseLimitToLast()``` | Adds a ```.limitToLast()``` clause to Firestore request               | ```FirebaseRepository```                       |
-| ```@FirebaseStartAt()```     | Adds a ```.startAt()``` query cursor to Firestore request             | ```FirebaseRepository```                       |
-| ```@FirebaseStartAfter()```  | Adds a ```.startAfter()``` query cursor to Firestore request          | ```FirebaseRepository```                       |
-| ```@FirebaseEndAt()```       | Adds a ```.endAt()``` query cursor to Firestore request               | ```FirebaseRepository```                       |
-| ```@FirebaseEndBefore()```   | Adds a ```.endBefore()``` query cursor to Firestore request           | ```FirebaseRepository```                       |
+| Decorator                | Description                                                       | Repository type                        |
+|--------------------------|-------------------------------------------------------------------|----------------------------------------|
+| `@PathParam()`           | Replaces path parameter with field value                          | `HttpRepository`, `FirebaseRepository` |
+| `@HttpQueryParam()`      | Adds a query param to the HTTP request (eg. `/users/?name=Oscar`) | `HttpRepository`                       |
+| `@HttpHeader()`          | Adds a HTTP header to the request with field value                | `HttpRepository`                       |
+| `@FirebaseCriteria()`    | Adds a Firestore query criteria                                   | `FirebaseRepository`                   |
+| `@FirebaseOrderBy()`     | Adds a `.orderBy()` clause to Firestore request                   | `FirebaseRepository`                   |
+| `@FirebaseLimit()`       | Adds a `.limit()` clause to Firestore request                     | `FirebaseRepository`                   |
+| `@FirebaseLimitToLast()` | Adds a `.limitToLast()` clause to Firestore request               | `FirebaseRepository`                   |
+| `@FirebaseStartAt()`     | Adds a `.startAt()` query cursor to Firestore request             | `FirebaseRepository`                   |
+| `@FirebaseStartAfter()`  | Adds a `.startAfter()` query cursor to Firestore request          | `FirebaseRepository`                   |
+| `@FirebaseEndAt()`       | Adds a `.endAt()` query cursor to Firestore request               | `FirebaseRepository`                   |
+| `@FirebaseEndBefore()`   | Adds a `.endBefore()` query cursor to Firestore request           | `FirebaseRepository`                   |
 
-The following example shows a query used in a ```findAll()``` operation on a Firebase
+The following example shows a query used in a `findAll()` operation on a Firebase
 resource.
 
 ```typescript
@@ -485,8 +487,8 @@ export class ClientService {
 
 ## Resource configuration
 
-You can configure your resource to your needs by adding context to ```@HttpResource()``` 
-and ```@FirebaseResource()``` resource decorators.
+You can configure your resource to your needs by adding context to `@HttpResource()` 
+and `@FirebaseResource()` resource decorators.
 
 > For example, you may need to specify a different path to your resource depending on
 > the operation. This can be done by using the syntax in the following example.
@@ -503,26 +505,26 @@ export class Library {
 
 For each operation execution, NgxRepository will look for a specific context attached to
 the operation for the resource. If no specific context is found, the default context 
-(here the ```path```) will be used.
+(here the `path`) will be used.
 
 The available configuration is different depending on the type of resource and the 
 targeted operation.
 
 The targetable operations are the following :
 
-* ```findById```
-* ```findOne```
-* ```findAll```
-* ```create```
-* ```update```
-* ```patch```
-* ```delete```
-* ```read```
-* ```write```
+* `findById`
+* `findOne`
+* `findAll`
+* `create`
+* `update`
+* `patch`
+* `delete`
+* `read`
+* `write`
 
 **Response type**
 
-Define a specific response type (different from the resource) using ```responseType```
+Define a specific response type (different from the resource) using `responseType`
 context parameter.
 
 ```typescript
@@ -539,11 +541,11 @@ export class Library {
 
 **Path**
 
-Define a specific path for an operation using ```path``` context parameter. Passing a
-string directly as an operation context is also possible to define the ```path``` context
+Define a specific path for an operation using `path` context parameter. Passing a
+string directly as an operation context is also possible to define the `path` context
 parameter.
 
-> ⚠️ This context parameter is only available for ```@HttpResource()```
+> ⚠️ This context parameter is only available for `@HttpResource()`
 
 ```typescript
 @HttpResource({
@@ -561,10 +563,10 @@ export class Library {
 **Page response processor**
 
 Define a specific [page response processor](#page-response-processor) using
-```pageResponseProcessor``` context parameter.
+`pageResponseProcessor` context parameter.
 
-> ⚠️ This context parameter is only available for ```findAll``` operation and
-> ```@HttpResource()```
+> ⚠️ This context parameter is only available for `findAll` operation and
+> `@HttpResource()`
 
 ```typescript
 @HttpResource({
@@ -578,9 +580,84 @@ export class Library {
 }
 ```
 
-## Page response processor
+**Global configuration**
+
+It is also possible to add some global configuration by adding it directly in the
+`forRoot()` method of your driver module import.
+
+## HTTP Pagination
+
+> ⚠️ This feature is only available for `@HttpResource()`
+
+### Page type
+
+NgxRepository comes with a prebuilt HTTP pagination system. If a `@HttpResource()` is
+paginated server-side, the server usually sends in the HTTP response some context about the
+data being sent (page number, total number of elements and page size). NgxRepository holds
+these infos in a `Page` object.
+
+The `Page` class extends the `Array` type and exposes additional infos about
+eventual server-side pagination.
+
+This is the implementation of the `Page` type :
+
+```typescript
+export class Page<T = any> extends Array<T> {
+
+  public currentPage: number;
+
+  public itemsPerPage: number;
+
+  public totalItems: number;
+}
+```
+
+The `findAll` method of `HttpRepository` returns a `Observable<Page<T>>` 
+where `T` is your resource. You can use it as an `Array` or as a `Page`
+if you want to access the pagination infos.
+
+### Page response processor
+
+By default, the fields of the `Page` object returned by the
+`findAll`method of `HttpRepository` will be equal to :
+
+* `0` for the `currentPage` field
+* `items.length` for the `itemsPerPage` and `totalItems` fields
+
+This is because the pagination infos can be returned in different ways (sometimes in
+the response headers, sometimes in the body... ). To indicate how the server returns
+these elements, you have to create a `PageResponseProcessor`.
+
+```typescript
+import { Injectable } from '@angular/core';
+import { Page, RequestManagerContext, ResponseProcessor } from '@witty-services/ngx-repository';
+import { HttpRepositoryResponse } from '@witty-services/ngx-http-repository';
+
+@Injectable()
+export class MyPageResponseProcessor implements ResponseProcessor {
+
+  public transform(response: any, origin: HttpRepositoryResponse, context: RequestManagerContext): any {
+    const totalItems: number = parseInt(origin.getHeaders().get('apiTotalItems'), 10);
+    const itemsPerPage: number = parseInt(origin.getHeaders().get('apiPerPage'), 10);
+    const currentPage: number = parseInt(origin.getHeaders().get('apiCurrentPage'), 10);
+
+    return Page.build(response, currentPage, itemsPerPage, totalItems);
+  }
+}
+```
+
+A `PageResponseProcessor` implements the `ResponseProcessor` interface. This
+interface exposes a `transform()` method which transforms the HTTP response.
+In this method, you can build a `Page` object using the infos about the HTTP
+response provided in the `transform()` method parameters.
+
+Then, provide this processor in your `AppModule` and add it to
+any `findAll` configuration you need. It can be on a 
+[specific `HttpResource()` or globally](#resource-configuration).
 
 ## HttpLiveResource
+
+> ⚠️ This feature is only available for `@HttpResource()`
 
 ## Advanced usage
 
